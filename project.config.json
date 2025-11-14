@@ -18,7 +18,8 @@
       "ignore": [],
       "disablePlugins": [],
       "outputPath": ""
-    }
+    },
+    "urlCheck": false
   },
   "condition": {},
   "editorSetting": {

@@ -44,8 +44,9 @@ Page({
       const token = wx.getStorageSync('token')
       if (!token) return
 
+      const serverUrl = getApp().globalData.getServerUrl()
       const res = await wx.request({
-        url: 'http://192.168.0.108:3000/api/stats/today',
+        url: `${serverUrl}/api/stats/today`,
         method: 'GET',
         header: {
           'Authorization': `Bearer ${token}`

@@ -216,8 +216,9 @@ Page({
       const token = wx.getStorageSync('token')
       if (!token) return
 
+      const serverUrl = getApp().globalData.getServerUrl()
       const res = await wx.request({
-        url: 'http://192.168.0.108:3000/api/workout/history',
+        url: `${serverUrl}/api/workout/history`,
         method: 'GET',
         header: {
           'Authorization': `Bearer ${token}`
@@ -439,8 +440,9 @@ Page({
 
       console.log('准备保存运动数据:', workoutData)
 
+      const serverUrl = getApp().globalData.getServerUrl()
       const res = await wx.request({
-        url: 'http://192.168.0.108:3000/api/workout/record',
+        url: `${serverUrl}/api/workout/record`,
         method: 'POST',
         header: {
           'Authorization': `Bearer ${token}`,

@@ -3,7 +3,7 @@ Page({
     username: '',
           password: '',
       loading: false,
-      serverUrl: 'http://192.168.0.108:3000'
+      useLocalAuth: true
     },
 
   onLoad() {
@@ -32,7 +32,7 @@ Page({
   },
 
   onLogin() {
-    const { username, password } = this.data
+    const { username, password, useLocalAuth } = this.data
     
     if (!username.trim()) {
       wx.showToast({
@@ -54,9 +54,40 @@ Page({
 
     this.setData({ loading: true })
 
-    // 调用登录接口
+    if (useLocalAuth) {
+      // 本地登录：生成本地令牌与用户信息
+      const fakeToken = `local_${Date.now()}`
+      const localUser = {
+        id: 1,
+        username: username.trim(),
+        nickname: username.trim(),
+        avatar: '/assets/tabbar/home.png',
+        role: 'local'
+      }
+
+      wx.setStorageSync('token', fakeToken)
+      wx.setStorageSync('userInfo', localUser)
+
+      getApp().globalData.token = fakeToken
+      getApp().globalData.userInfo = localUser
+
+      wx.showToast({ title: '登录成功(本地)', icon: 'success', duration: 1000 })
+
+      const setupCompleted = wx.getStorageSync('setupCompleted')
+      if (setupCompleted) {
+        wx.reLaunch({ url: '/pages/home/home' })
+      } else {
+        wx.navigateTo({ url: '/pages/terms/terms' })
+      }
+
+      this.setData({ loading: false })
+      return
+    }
+
+    // 远程登录（保留可切换）
+    const serverUrl = getApp().globalData.getServerUrl()
     wx.request({
-      url: `${this.data.serverUrl}/api/login`,
+      url: `${serverUrl}/api/login`,
       method: 'POST',
       data: {
         username: username.trim(),
@@ -64,74 +95,24 @@ Page({
       },
       success: (res) => {
         if (res.statusCode === 200 && res.data.success) {
-          // 登录成功
           const { token, userInfo } = res.data
-          
-          // 保存登录信息
           wx.setStorageSync('token', token)
           wx.setStorageSync('userInfo', userInfo)
-          
-          // 更新全局数据
           getApp().globalData.token = token
           getApp().globalData.userInfo = userInfo
-          
-          wx.showToast({
-            title: '登录成功',
-            icon: 'success',
-            duration: 1500
-          })
-          
-          // 检查是否完成初始设置
+          wx.showToast({ title: '登录成功', icon: 'success', duration: 1500 })
           const setupCompleted = wx.getStorageSync('setupCompleted')
           if (setupCompleted) {
-            // 已完成设置，跳转到首页
-            wx.reLaunch({
-              url: '/pages/home/home'
-            })
+            wx.reLaunch({ url: '/pages/home/home' })
           } else {
-            // 未完成设置，跳转到服务条款页面
-            wx.navigateTo({
-              url: '/pages/terms/terms'
-            })
+            wx.navigateTo({ url: '/pages/terms/terms' })
           }
         } else {
-          // 登录失败
-          wx.showToast({
-            title: res.data.error || '登录失败',
-            icon: 'none',
-            duration: 3000
-          })
+          wx.showToast({ title: res.data.error || '登录失败', icon: 'none', duration: 3000 })
         }
       },
-      fail: (error) => {
-        console.error('登录请求失败:', error)
-        let errorMessage = '网络错误，请重试'
-        
-        if (error.errMsg.includes('timeout')) {
-          errorMessage = '请求超时，请检查网络连接'
-        } else if (error.errMsg.includes('fail')) {
-          errorMessage = '服务器连接失败，请稍后重试'
-        } else if (error.statusCode) {
-          switch (error.statusCode) {
-            case 401:
-              errorMessage = '账号或密码错误'
-              break
-            case 404:
-              errorMessage = '服务器地址错误'
-              break
-            case 500:
-              errorMessage = '服务器内部错误'
-              break
-            default:
-              errorMessage = `请求失败 (${error.statusCode})`
-          }
-        }
-        
-        wx.showToast({
-          title: errorMessage,
-          icon: 'none',
-          duration: 3000
-        })
+      fail: () => {
+        wx.showToast({ title: '服务器连接失败', icon: 'none', duration: 3000 })
       },
       complete: () => {
         this.setData({ loading: false })

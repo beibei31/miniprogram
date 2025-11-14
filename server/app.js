@@ -47,7 +47,7 @@ async function startServer() {
     const server = app.listen(PORT, '0.0.0.0', () => {
       console.log(`✅ 运动小程序后端服务运行在端口 ${PORT}`)
       console.log(`🌐 服务地址: http://localhost:${PORT}`)
-      console.log(`🌐 外部地址: http://192.168.0.104:${PORT}`)
+      console.log(`🌐 外部地址: http://10.197.88.94:${PORT}`)
       console.log(`📊 数据库配置: ${config.db.host}:${config.db.database}`)
       console.log(`🛑 按 Ctrl+C 停止服务器`)
     })
